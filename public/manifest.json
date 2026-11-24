@@ -1,0 +1,19 @@
+{
+  "name": "CampoCheck - Bitácora de Inspección PWA",
+  "short_name": "CampoCheck",
+  "description": "Aplicación Web Progresiva para inspección en campo con soporte offline, cámara y notificaciones",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f8fafc",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "/pwa.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

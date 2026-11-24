@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0f172a">
+  <title>CampoCheck — Bitácora PWA</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/png" href="/pwa.png">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-brand">
+      <img src="/pwa.png" alt="Logo CampoCheck" class="brand-logo">
+      <div>
+        <h1>CampoCheck PWA</h1>
+        <p class="subtitle">Bitácora de Inspección en Campo (SA + DE)</p>
+      </div>
+    </div>
+    <div class="header-status">
+      <span id="net-status" class="pill online">Online</span>
+      <span id="sync-badge" class="pill">0 pendientes</span>
+    </div>
+  </header>
+
+  <nav class="top-nav" aria-label="Navegación principal">
+    <button class="nav-btn active" data-screen="home">Home</button>
+    <button class="nav-btn" data-screen="reports">Reportes</button>
+    <button class="nav-btn" data-screen="capture">Nuevo / Cámara</button>
+    <button class="nav-btn" data-screen="settings">Notificaciones &amp; Sync</button>
+  </nav>
+
+  <main class="main-content">
+    <!-- PANTALLA 1: HOME -->
+    <section id="screen-home" class="screen active">
+      <div class="card">
+        <h2>Panel Principal (Home)</h2>
+        <p>Bienvenido, <strong id="home-inspector">Inspector</strong>. Gestiona inspecciones técnicas con soporte offline, cámara física y notificaciones.</p>
+        <div class="stats-grid">
+          <div class="stat-box">
+            <span class="stat-num" id="stat-total">0</span>
+            <span class="stat-label">Total Reportes</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-num" id="stat-pending">0</span>
+            <span class="stat-label">Pendientes</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-num" id="stat-resolved">0</span>
+            <span class="stat-label">Resueltos</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-num" id="stat-offline">0</span>
+            <span class="stat-label">Cola Offline</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Estado del Entorno PWA</h2>
+        <p id="sw-status">Verificando Service Worker...</p>
+        <p id="notif-summary">Permiso de notificaciones: <strong id="notif-perm-text">default</strong></p>
+        <div class="actions-row">
+          <button class="btn" id="btn-go-capture">Nueva Inspección con Cámara</button>
+          <button class="btn btn-secondary" id="btn-sync-now">Sincronizar Ahora</button>
+          <a href="/ssr-reportes" class="btn btn-secondary">Ver Vista SSR (Servidor)</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- PANTALLA 2: REPORTES (CSR) -->
+    <section id="screen-reports" class="screen">
+      <div class="card">
+        <div class="filters-bar">
+          <h2>Reportes (Vista CSR + Datos Locales/Remotos)</h2>
+          <div class="actions-row">
+            <select id="filter-status" aria-label="Filtrar por estado">
+              <option value="all">Todos</option>
+              <option value="pendiente">Pendientes</option>
+              <option value="resuelto">Resueltos</option>
+              <option value="offline">Solo pendientes de sync</option>
+            </select>
+            <button class="btn btn-secondary btn-sm" id="btn-refresh-reports">Recargar</button>
+          </div>
+        </div>
+      </div>
+      <div id="reports-container" class="reports-list"></div>
+    </section>
+
+    <!-- PANTALLA 3: CAPTURA / CÁMARA FÍSICA -->
+    <section id="screen-capture" class="screen">
+      <div class="card">
+        <h2>Registrar Inspección (Cámara + GPS + Offline)</h2>
+        <form id="report-form" class="form-grid">
+          <div class="form-group">
+            <label for="rep-title">Título de la incidencia</label>
+            <input type="text" id="rep-title" required placeholder="Ej. Revisión de transformador">
+          </div>
+          <div class="form-group">
+            <label for="rep-category">Categoría</label>
+            <select id="rep-category">
+              <option value="Infraestructura">Infraestructura</option>
+              <option value="Mantenimiento">Mantenimiento</option>
+              <option value="Seguridad">Seguridad</option>
+              <option value="Eléctrico">Eléctrico</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="rep-location">Ubicación / Área</label>
+            <input type="text" id="rep-location" required placeholder="Ej. Planta Norte - Nave 2">
+          </div>
+          <div class="form-group">
+            <label for="rep-description">Observaciones</label>
+            <textarea id="rep-description" placeholder="Describe los hallazgos de la inspección..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Evidencia Fotográfica (Elemento físico: Cámara)</label>
+            <div class="camera-box">
+              <video id="camera-preview" class="hidden" autoplay playsinline muted></video>
+              <img id="photo-preview" class="hidden" alt="Vista previa de fotografía">
+              <canvas id="camera-canvas" class="hidden"></canvas>
+              <div class="actions-row">
+                <button type="button" class="btn btn-sm" id="btn-start-camera">Activar Cámara</button>
+                <button type="button" class="btn btn-ok btn-sm hidden" id="btn-take-photo">Tomar Foto</button>
+                <button type="button" class="btn btn-danger btn-sm hidden" id="btn-stop-camera">Detener</button>
+                <label class="btn btn-secondary btn-sm" style="color:#0f172a; margin:0;">
+                  Subir / Cámara nativa
+                  <input type="file" id="file-photo-input" accept="image/*" capture="environment" class="hidden">
+                </label>
+              </div>
+              <small id="camera-status">Cámara inactiva. Puedes activarla o usar captura nativa.</small>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="rep-coords">Geolocalización (Sensor GPS opcional)</label>
+            <div class="actions-row">
+              <input type="text" id="rep-coords" placeholder="Latitud, Longitud" readonly style="flex:1;">
+              <button type="button" class="btn btn-secondary btn-sm" id="btn-get-gps">Obtener GPS</button>
+            </div>
+          </div>
+
+          <button type="submit" class="btn">Guardar Reporte</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- PANTALLA 4: NOTIFICACIONES Y AJUSTES -->
+    <section id="screen-settings" class="screen">
+      <div class="card">
+        <h2>Perfil Local (localStorage)</h2>
+        <div class="form-group">
+          <label for="inspector-name">Nombre del Inspector</label>
+          <div class="actions-row">
+            <input type="text" id="inspector-name" placeholder="Tu nombre" style="flex:1;">
+            <button type="button" class="btn btn-sm" id="btn-save-inspector">Guardar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Notificaciones (Web Notifications API + SW)</h2>
+        <p>Activa las notificaciones para recibir alertas al guardar reportes offline y al completar la sincronización.</p>
+        <div class="actions-row">
+          <button type="button" class="btn" id="btn-ask-notif">Solicitar Permiso</button>
+          <button type="button" class="btn btn-ok" id="btn-test-notif">Enviar Notificación de Prueba</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Almacenamiento Offline &amp; Caché</h2>
+        <p id="cache-info">IndexedDB almacena los reportes localmente cuando no hay red y los sincroniza automáticamente al reconectar.</p>
+        <div class="actions-row">
+          <button type="button" class="btn btn-secondary" id="btn-force-sync">Forzar Sincronización</button>
+          <button type="button" class="btn btn-danger" id="btn-clear-local">Limpiar Caché Local</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

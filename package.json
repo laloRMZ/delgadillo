@@ -1,0 +1,12 @@
+{
+  "name": "campocheck-pwa",
+  "version": "1.0.0",
+  "description": "PWA CampoCheck - Bitácora de Inspección en Campo (Evaluación 2)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test tests/app.test.js"
+  },
+  "keywords": ["pwa", "service-worker", "indexeddb", "camera", "notifications"],
+  "type": "commonjs"
+}

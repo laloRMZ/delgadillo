@@ -1,0 +1,26 @@
+[
+  {
+    "id": "rep-1001",
+    "title": "Revisión de tablero eléctrico principal",
+    "category": "Infraestructura",
+    "location": "Edificio A - Planta Baja",
+    "description": "Se verificó voltaje estable en líneas trifásicas y etiquetado de circuitos.",
+    "status": "resuelto",
+    "photo": null,
+    "coords": "19.4326, -99.1332",
+    "inspector": "Angel Eduardo Ramirez",
+    "createdAt": "2026-11-23T16:30:00.000Z"
+  },
+  {
+    "id": "rep-1002",
+    "title": "Fuga menor en válvula de presión",
+    "category": "Mantenimiento",
+    "location": "Cuarto de Bombas - Nivel 1",
+    "description": "Goteo intermitente detectado en empaque secundario; requiere ajuste en próxima ronda.",
+    "status": "pendiente",
+    "photo": null,
+    "coords": "19.4329, -99.1335",
+    "inspector": "Angel Eduardo Ramirez",
+    "createdAt": "2026-11-24T09:15:00.000Z"
+  }
+]

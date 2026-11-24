@@ -1,5 +1,7 @@
 node_modules/
+.vercel/
 .DS_Store
 *.log
 _doc_temp.html
 _doc_body.pdf
+.vercel

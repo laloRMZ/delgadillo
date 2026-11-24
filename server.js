@@ -302,4 +302,10 @@ if (require.main === module) {
   });
 }
 
-module.exports = { createAppServer, createRequestHandler, readReports, writeReports };
+const defaultHandler = createRequestHandler();
+defaultHandler.createAppServer = createAppServer;
+defaultHandler.createRequestHandler = createRequestHandler;
+defaultHandler.readReports = readReports;
+defaultHandler.writeReports = writeReports;
+
+module.exports = defaultHandler;

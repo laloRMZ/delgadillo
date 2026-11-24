@@ -5,6 +5,22 @@ const path = require('path');
 const DEFAULT_PORT = process.env.PORT || 8000;
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const DEFAULT_DATA_FILE = path.join(__dirname, 'data', 'reports.json');
+const VERCEL_TMP_DATA_FILE = '/tmp/campocheck-reports.json';
+
+function resolveDataFile(customDataFile) {
+  if (customDataFile) return customDataFile;
+  if (process.env.VERCEL) {
+    if (!fs.existsSync(VERCEL_TMP_DATA_FILE)) {
+      try {
+        fs.copyFileSync(DEFAULT_DATA_FILE, VERCEL_TMP_DATA_FILE);
+      } catch {
+        fs.writeFileSync(VERCEL_TMP_DATA_FILE, '[]', 'utf8');
+      }
+    }
+    return VERCEL_TMP_DATA_FILE;
+  }
+  return DEFAULT_DATA_FILE;
+}
 
 const MIME_TYPES = {
   '.html': 'text/html; charset=UTF-8',
@@ -143,10 +159,9 @@ function renderSsrReportsPage(reports) {
 </html>`;
 }
 
-function createAppServer(options = {}) {
-  const dataFile = options.dataFile || DEFAULT_DATA_FILE;
-
-  return http.createServer(async (req, res) => {
+function createRequestHandler(options = {}) {
+  return async (req, res) => {
+    const dataFile = resolveDataFile(options.dataFile);
     const reqUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
     const pathname = reqUrl.pathname;
 
@@ -273,7 +288,11 @@ function createAppServer(options = {}) {
         res.end(content);
       }
     });
-  });
+  };
+}
+
+function createAppServer(options = {}) {
+  return http.createServer(createRequestHandler(options));
 }
 
 if (require.main === module) {
@@ -283,4 +302,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { createAppServer, readReports, writeReports };
+module.exports = { createAppServer, createRequestHandler, readReports, writeReports };
